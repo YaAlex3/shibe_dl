@@ -1,0 +1,14 @@
+[package]
+name = "shibe-dl"
+version = "0.1.0"
+authors = ["YaAlex"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+reqwest = "0.10.6"
+tokio = { version = "0.2.21", features = ["macros", "fs"] }
+clap = "3.0.0-beta.1"
+serde_json = "1.0"
+tempfile = "3"
