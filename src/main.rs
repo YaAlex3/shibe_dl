@@ -1,13 +1,14 @@
-extern crate serde_json;
-extern crate reqwest;
-extern crate tokio;
 extern crate clap;
+extern crate reqwest;
+extern crate serde_json;
+extern crate tokio;
 
 use clap::{App, Arg};
+use indicatif::{ProgressBar, ProgressStyle};
 use simple_user_input::get_input;
-use tokio::prelude::*;
 use std::io;
 use std::io::prelude::*;
+use tokio::prelude::*;
 
 fn pause() {
     let mut stdin = io::stdin();
@@ -25,12 +26,16 @@ async fn main() -> Result<(), reqwest::Error> {
         .version("1.0")
         .author("YaAlex <yaalex@yaalex.tk>")
         .about("Downloads cute animols from shibe.online")
-        .arg(Arg::with_name("count")
-            .about("Count of animols to download")
-            .multiple(true))
-        .arg(Arg::new("debug")
-            .short('d')
-            .about("print debug information verbosely"))
+        .arg(
+            Arg::with_name("count")
+                .about("Count of animols to download")
+                .multiple(true),
+        )
+        .arg(
+            Arg::new("debug")
+                .short('d')
+                .about("print debug information verbosely"),
+        )
         .get_matches();
     let count: String;
     if matches.is_present("debug") {
@@ -41,11 +46,8 @@ async fn main() -> Result<(), reqwest::Error> {
     } else {
         count = get_input("How many pics?\nDefault - 1");
     }
-    
+
     let animal: &str;
-    let _shib: String = String::from("s");
-    let _birb: String = String::from("b");
-    let _cat: String = String::from("c");
     let anim = get_input("Which animol?\ns - shibe\nb - birb\nc - catto\nDefault - shib");
     let str_anim: &str = anim.as_str();
     match str_anim {
@@ -55,7 +57,10 @@ async fn main() -> Result<(), reqwest::Error> {
         &_ => animal = "shibes",
     }
 
-    let url: String = format!("http://shibe.online/api/{}?count={}&urls=true&httpsUrls=true", animal, count);
+    let url: String = format!(
+        "http://shibe.online/api/{}?count={}&urls=true&httpsUrls=true",
+        animal, count
+    );
     let res = reqwest::get(&url).await.expect("request failed");
     if matches.is_present("debug") {
         println!("Status: {}", res.status());
@@ -66,10 +71,18 @@ async fn main() -> Result<(), reqwest::Error> {
     std::fs::create_dir_all(animal).expect("failed to create dir");
     let mut i: u8 = 0;
     let mut threads: Vec<_> = Vec::new();
-    for uri in body_p { 
+    let bar = ProgressBar::new_spinner();
+    bar.enable_steady_tick(180);
+    bar.set_style(
+        ProgressStyle::default_spinner()
+            .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"])
+            .template("{spinner:.blue} {msg}"),
+    );
+    bar.set_message("Downloading...");
+    for uri in body_p {
         i += 1;
         let thrd = tokio::task::spawn(async move {
-            let mut respons = reqwest::get(&uri).await.expect("dload error");    
+            let mut respons = reqwest::get(&uri).await.expect("dload error");
             let fname = format!("{}/{}_{}.jpg", animal, animal, i);
             let mut file = tokio::fs::File::create(fname).await.expect("create error");
             while let Some(chunk) = respons.chunk().await.expect("chunk err") {
@@ -86,19 +99,25 @@ async fn main() -> Result<(), reqwest::Error> {
         }
         t.await.unwrap();
     }
-    println!("Success! Downloaded {} {}\nLocated under ./{}", i, animal, animal);
+    bar.finish_with_message(
+        format!(
+            "Success! Downloaded {} {}\nLocated under ./{}",
+            i, animal, animal
+        )
+        .as_str(),
+    );
     pause();
     Ok(())
 }
 
 mod simple_user_input {
     use std::io;
-    pub fn get_input(prompt: &str) -> String{
-        println!("{}",prompt);
+    pub fn get_input(prompt: &str) -> String {
+        println!("{}", prompt);
         let mut input = String::new();
         match io::stdin().read_line(&mut input) {
-            Ok(_goes_into_input_above) => {},
-            Err(_no_updates_is_fine) => {},
+            Ok(_goes_into_input_above) => {}
+            Err(_no_updates_is_fine) => {}
         }
         input.trim().to_string()
     }
