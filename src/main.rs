@@ -22,7 +22,7 @@ async fn request_hlp(count: u64, animal: &str) -> Vec<String> {
 }
 
 async fn first_request(count: String, animal: &str) -> Vec<String> {
-    let count_i: u64 = count.parse().unwrap();
+    let count_i: u64 = count.parse().unwrap_or(1);
     let requests_i: u64;
     let mut body_p: Vec<String> = Vec::new();
     let mut leftover_i: u64 = 0;
