@@ -6,19 +6,8 @@ extern crate tokio;
 use clap::{App, Arg};
 use indicatif::{ProgressBar, ProgressStyle};
 use simple_user_input::get_input;
-use std::io;
-use std::io::prelude::*;
 use tokio::prelude::*;
 
-fn pause() {
-    let mut stdin = io::stdin();
-    let mut stdout = io::stdout();
-    // We want the cursor to stay at the end of the line, so we print without a newline and flush manually.
-    write!(stdout, "Press any key to continue...").unwrap();
-    stdout.flush().unwrap();
-    // Read a single byte and discard
-    let _ = stdin.read(&mut [0u8]).unwrap();
-}
 
 async fn request_hlp(count: u64, animal: &str) -> Vec<String> {
     let res = reqwest::get(&format!(
@@ -152,7 +141,6 @@ async fn main() -> Result<(), reqwest::Error> {
         )
         .as_str(),
     );
-    pause();
     Ok(())
 }
 
